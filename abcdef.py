@@ -1,5 +1,6 @@
 import numpy as np
 import cv2
+import argparse
 
 cap = cv2.VideoCapture(0)
 
@@ -16,12 +17,20 @@ while True:
     im = threshold(frame,[150,100,200,255,150,255]) #red filter
     im2, contours, hierarchy = cv2.findContours(im,cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)
 
-    cv2.imshow("ellipse", im)
-    cv2.imshow("Frame", frame)
-        
+    if (len(contours)>=5):
+        print(np.vstack(contours))
+        fit=cv2.fitEllipse(np.vstack(contours))
+        ellipse=cv2.ellipse(frame,fit,(255,0,0),5)
+
+    cv2.imshow("treshold", im)
+    cv2.imshow("Frame+ellpise", frame)
+
+
     key = cv2.waitKey(1)
     if key == 27:
         break
- 
+
+
 cap.release()
 cv2.destroyAllWindows()
+
