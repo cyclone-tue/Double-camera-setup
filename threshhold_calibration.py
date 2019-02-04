@@ -2,6 +2,8 @@ import numpy as np
 import cv2
 
 cap = cv2.VideoCapture(0)
+cap.set(3,1920)
+cap.set(4,1080)
 
 def threshold(image,values):
     low_h, low_s, low_v, high_h, high_s, high_v = values
