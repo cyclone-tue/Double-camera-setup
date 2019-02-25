@@ -35,7 +35,7 @@ while True:
     #frame = cv2.imread('WIN_20190211_16_22_23_Pro.jpg',1)
     _, frame = cap.read()
 
-    imred =     threshold(frame,[160, 32, 160, 10,  150, 255]) #red filter
+    imred =     threshold(frame,[165, 32, 160, 5,  150, 255]) #red filter
     imgreen =   threshold(frame,[ 65, 32, 160, 95, 150, 255]) #green filter
     imblue =    threshold(frame,[110, 32, 160, 140, 150, 255]) #blue filter
 
@@ -52,13 +52,20 @@ while True:
 
     combined = np.stack([imblue,imgreen,imred],axis=2)
     
-    contours, hierarchy = cv2.findContours(RGB,cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)
-    
-    if (len(contours) > 20):
-        points = np.vstack(contours)
+
+    CoordList = np.argwhere(RGB == 255)
+    points = np.array([[i, j] for [j, i] in CoordList])
+    # print(CoordList)
+    # print(points)
+
+
+
+    if (len(points) > 20):
         outline = cv2.convexHull(points)
-        approx=cv2.approxPolyDP(outline,10,True)
+        approx=cv2.approxPolyDP(outline,20,True)
         cv2.drawContours(frame, [approx], 0, (255,0,0), 3)
+
+        print(approx)
         
         if (np.shape(approx)[0] == 4):
             approx = approx.astype(np.float32)
