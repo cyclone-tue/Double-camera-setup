@@ -48,17 +48,22 @@ while True:
     RGB = cv2.bitwise_or(RGB,B)
 
     combined = np.stack([imblue,imgreen,imred],axis=2)
-    
+
+
     contours, hierarchy = cv2.findContours(RGB,cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)
-    
-    if (len(contours) > 20):
-        points = np.vstack(contours)
+    CoordList=np.argwhere(RGB==255)
+    points=np.array([[i,j] for [j,i] in CoordList])
+    print(CoordList)
+    print(points)
+
+
+    if (len(points) > 20):
         outline = cv2.convexHull(points)
         approx=cv2.approxPolyDP(outline,10,True)
-        
+
         #if (np.shape(approx)[0] == 4):
-        #    rvecs, tvecs, _objPoints = aruco.estimatePoseSingleMarkers(approx, 0.7, cameraMatrix, distCoeffs)
-        
+         #   rvecs, tvecs, _objPoints = aruco.estimatePoseSingleMarkers(approx, 0.7, cameraMatrix, distCoeffs)
+
         cv2.drawContours(frame, [approx], 0, (255,0,0), 3)
 
     cv2.imshow("Frame+ellipse", frame)
