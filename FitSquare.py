@@ -31,14 +31,7 @@ def weirdFilter(image):
     kernel = np.ones((10,10),np.float32)
     return cv2.filter2D(image,-1,kernel)
 
-while True:
-    #frame = cv2.imread('WIN_20190211_16_22_23_Pro.jpg',1)
-    _, frame = cap.read()
-
-    imred =     threshold(frame,[165, 32, 160, 5,  150, 255]) #red filter
-    imgreen =   threshold(frame,[ 65, 32, 160, 95, 150, 255]) #green filter
-    imblue =    threshold(frame,[110, 32, 160, 140, 150, 255]) #blue filter
-
+def calc_overlap(imred,imgreen,imblue):
     A1 = cv2.bitwise_and(weirdFilter(imred),weirdFilter(imgreen))
     A2 = cv2.bitwise_and(weirdFilter(imred),weirdFilter(imblue))
     A3 = cv2.bitwise_and(weirdFilter(imgreen),weirdFilter(imblue))
@@ -49,16 +42,21 @@ while True:
 
     RGB = cv2.bitwise_or(R,G)
     RGB = cv2.bitwise_or(RGB,B)
+    return RGB
+
+while True:
+    #frame = cv2.imread('Photos/WIN_20190211_16_22_50_Pro.jpg',1)
+    _, frame = cap.read()
+
+    imred =     threshold(frame,[165, 32, 160, 5,  150, 255]) #red filter
+    imgreen =   threshold(frame,[ 65, 32, 160, 95, 150, 255]) #green filter
+    imblue =    threshold(frame,[110, 32, 160, 140, 150, 255]) #blue filter
 
     combined = np.stack([imblue,imgreen,imred],axis=2)
-    
+    overlap = calc_overlap(imred,imgreen,imblue)
 
-    CoordList = np.argwhere(RGB == 255)
+    CoordList = np.argwhere(overlap == 255)
     points = np.array([[i, j] for [j, i] in CoordList])
-    # print(CoordList)
-    # print(points)
-
-
 
     if (len(points) > 20):
         outline = cv2.convexHull(points)
@@ -82,15 +80,13 @@ while True:
         cv2.aruco.drawAxis(frame,cameraMatrix, distCoeffs,rvecs[0],tvecs[0],0.1)
     
     cv2.imshow("Frame+ellipse", frame)
-    cv2.imshow("overlap",RGB)
+    cv2.imshow("overlap",overlap)
     cv2.imshow("filtered",weirdFilter(combined))
     cv2.imshow("rgb",combined)    
  
     key = cv2.waitKey(1)
     if key == 27:
         break
-
-
 
 cap.release()
 cv2.destroyAllWindows()
