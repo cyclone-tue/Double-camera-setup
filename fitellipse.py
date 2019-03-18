@@ -1,8 +1,32 @@
 import numpy as np
 import cv2
+from cv2 import aruco
 from numpy import linalg as LA
 
 cap = cv2.VideoCapture(0)
+
+
+# Tunable
+alpha = 0
+S1 = 1
+S2 = -1
+S3 = 1
+
+f=6.3392788734453904e+02
+r=0.375
+
+
+cameraMatrix = np.array([
+    [6.3392788734453904e+02, 0., 3.0808675953434488e+02],
+    [0.,6.3040138666052906e+02, 2.0155498451453073e+02],
+    [0., 0., 1. ]
+])
+
+
+
+distCoeffs = np.array([ 1.7802315026160684e-01, -2.2294989847251276e+00,
+       -1.5298749543854606e-02, -3.3860921093235033e-04,
+       1.3272266506874113e+01])
 
 def threshold(image,values):
     low_h, low_s, low_v, high_h, high_s, high_v = values
@@ -59,18 +83,42 @@ while True:
 
         # print([A,B,C,D,E,F])
 
-        Q=np.array([[A,B,D],[B,C,E],[D,E,F]])
-        w,v = LA.eig(Q)
+        Qe=np.array([[A,B,-D/f],[B,C,-E/f],[-D/f,-E/f,F/f**2]])
+        w,V = LA.eig(Qe)
 
-        print(w)
-        print(v)
+        l1,l2,l3= w #sorted(w,key=abs,reverse=True)
 
+        if not (l1*l2>0 and l1*l3<0):
+            l2,l3=l3,l2
+        elif not (l1*l2>0 and l1*l3<0):
+            l1, l3 = l3, l1
 
+        g = np.sqrt((l2-l3)/(l1-l3))
+        h = np.sqrt((l1-l2)/(l1-l3))
+
+        Rc = V.dot(np.array([[g*np.cos(alpha), S1*g*np.sin(alpha), S2*h],
+                           [np.sin(alpha), -S1*np.cos(alpha),0],
+                           [S1*S2*h*np.cos(alpha), S2*h*np.sin(alpha),-S1*g]]))
+
+        z0=S3*l2*r/np.sqrt(-l1*l3)
+
+        Cvector = z0*V.dot(np.array([[S2*l3/l2*h], [0], [-S1*l1/l2*g]]))
+        Nvector=V*np.array([S2*h, 0, -S1*g])
+
+        rvec,_ = cv2.Rodrigues(Rc)
+        tvec = np.array([[0.],[0.],[1.]])
+
+        print(V)
+        print(tvec)
+        print(rvec)
+
+        cv2.aruco.drawAxis(frame, cameraMatrix, distCoeffs, rvec, tvec, 0.1)
 
     cv2.imshow("rgb",combined)
     cv2.imshow("filtered",weirdFilter(combined))
     cv2.imshow("overlap",RGB)
     cv2.imshow("Frame+ellipse", frame)
+
 
 
 
