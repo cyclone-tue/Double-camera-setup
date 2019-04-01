@@ -57,7 +57,11 @@ def overlap(imred,imgreen,imblue):
     return RGB
 
 def getEllipseParams(fit):
-    (xc, yc), (b, a), theta = fit
+    (xc, yc), (a, b), theta = fit
+
+    a=a/2
+    b=b/2
+    theta = theta*np.pi/180
 
     A = a ** 2 * np.sin(theta) ** 2 + b ** 2 * np.cos(theta) ** 2
     B = (b ** 2 - a ** 2) * np.sin(theta) * np.cos(theta)
@@ -71,13 +75,32 @@ def getEllipseParams(fit):
 def nothing(x):
     pass
 
+
 cv2.namedWindow("balkjes")
 cv2.createTrackbar("alpha","balkjes",0,7,nothing)
+cv2.createTrackbar("xc","balkjes",0,640,nothing)
+cv2.createTrackbar("yc","balkjes",0,480,nothing)
+cv2.createTrackbar("a","balkjes",1,480,nothing)
+cv2.createTrackbar("b","balkjes",1,480,nothing)
+cv2.createTrackbar("theta","balkjes",0,360,nothing)
+
+cv2.namedWindow("SJES")
+cv2.createTrackbar("S1","SJES",0,2,nothing)
+cv2.createTrackbar("S2","SJES",0,2,nothing)
+cv2.createTrackbar("S3","SJES",0,2,nothing)
 
 while True:
     alpha = cv2.getTrackbarPos("alpha","balkjes")
+    xc = cv2.getTrackbarPos("xc","balkjes")
+    yc = cv2.getTrackbarPos("yc","balkjes")
+    a = cv2.getTrackbarPos("a","balkjes")
+    b = cv2.getTrackbarPos("b","balkjes")
+    theta = cv2.getTrackbarPos("theta","balkjes")
+    S1 = -1+cv2.getTrackbarPos("S1","SJES")
+    S2 = -1+cv2.getTrackbarPos("S2","SJES")
+    S3 = -1+cv2.getTrackbarPos("S3","SJES")
     
-    frame = cv2.imread("WIN_20190318_17_37_44_Pro.jpg")
+    _, frame = cap.read() #cv2.imread("WIN_20190318_17_37_44_Pro.jpg")
 
     imred =     threshold(frame,[160,32,160,10,150,255]) #red filter
     imgreen =   threshold(frame,[70,32,160,100,150,255]) #green filter
@@ -98,9 +121,10 @@ while True:
         for (rvec, tvec) in zip(rvecs,tvecs):
             aruco.drawAxis(frame, cameraMatrix, distCoeffs, rvec, tvec, 0.1)
             
-    if (len(contours) > 20):
-        points = np.vstack(contours)
-        fit=cv2.fitEllipse(points)
+    if (True): #len(contours) > 20
+        #points = np.vstack(contours)
+        #set custom ellipse
+        fit= (xc, yc), (a, b), theta #cv2.fitEllipse(points)  
 
         #draw ellipse
         ellipse=cv2.ellipse(frame,fit,(255,0,0),5)
@@ -114,7 +138,7 @@ while True:
             pw = l1,l2,l3 = [w[i] for i in p]  #permutation applied to w
             if (l1*l2 > 0 and l1*l3<0 and abs(l1)>=abs(l2)):
                 w=pw
-                V=np.transpose(np.array([V[:,i] for i in p]))
+                V=np.transpose(np.array([V[:,i] for i in p])) #permutation applied to V
                 break
 
         l1,l2,l3= w
@@ -127,8 +151,8 @@ while True:
                            [S1*S2*h*np.cos(alpha), S2*h*np.sin(alpha),-S1*g]]))
 
         z0=S3*l2*r/np.sqrt(-l1*l3)
-
         Cvector = z0*V.dot(np.array([[S2*l3/l2*h], [0], [-S1*l1/l2*g]]))
+        
         Nvector=V*np.array([S2*h, 0, -S1*g])
 
         rvec,_ = cv2.Rodrigues(Rc)
@@ -139,7 +163,7 @@ while True:
 
     #cv2.imshow("rgb",combined)
     #cv2.imshow("filtered",weirdFilter(combined))
-    #cv2.imshow("overlap",RGB)
+    cv2.imshow("overlap",RGB)
     cv2.imshow("Frame+ellipse", frame)
 
     key = cv2.waitKey(1)
