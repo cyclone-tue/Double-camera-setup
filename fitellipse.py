@@ -100,7 +100,7 @@ while True:
     S2 = -1+cv2.getTrackbarPos("S2","SJES")
     S3 = -1+cv2.getTrackbarPos("S3","SJES")
     
-    _, frame = cap.read() #cv2.imread("WIN_20190318_17_37_44_Pro.jpg")
+    frame = cv2.imread("WIN_20190318_17_37_44_Pro.jpg")
 
     imred =     threshold(frame,[160,32,160,10,150,255]) #red filter
     imgreen =   threshold(frame,[70,32,160,100,150,255]) #green filter
@@ -121,10 +121,10 @@ while True:
         for (rvec, tvec) in zip(rvecs,tvecs):
             aruco.drawAxis(frame, cameraMatrix, distCoeffs, rvec, tvec, 0.1)
             
-    if (True): #len(contours) > 20
-        #points = np.vstack(contours)
+    if (len(contours) > 20):
+        points = np.vstack(contours)
         #set custom ellipse
-        fit= (xc, yc), (a, b), theta #cv2.fitEllipse(points)  
+        fit= cv2.fitEllipse(points)  #(xc, yc), (a, b), theta
 
         #draw ellipse
         ellipse=cv2.ellipse(frame,fit,(255,0,0),5)
