@@ -123,6 +123,7 @@ while True:
             
     if (len(contours) > 20):
         points = np.vstack(contours)
+        print(points.dtype)
         #set custom ellipse
         fit= cv2.fitEllipse(points)  #(xc, yc), (a, b), theta
 
