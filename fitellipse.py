@@ -7,7 +7,6 @@ import itertools
 dictionary = aruco.Dictionary_get(aruco.DICT_ARUCO_ORIGINAL)
 cap = cv2.VideoCapture(0)
 
-
 # Tunable
 alpha = 0
 S1 = -1
