@@ -4,22 +4,8 @@ import cv2
 from numpy import linalg as LA
 import itertools
 
-# Calculates Rotation Matrix given euler angles.
-def RotationMatrix(theta):
-    R_x = np.array([[1, 0, 0],
-                    [0, np.cos(theta[0]), -np.sin(theta[0])],
-                    [0, np.sin(theta[0]), np.cos(theta[0])]
-                    ])
-    R_y = np.array([[np.cos(theta[1]), 0, np.sin(theta[1])],
-                    [0, 1, 0],
-                    [-np.sin(theta[1]), 0, np.cos(theta[1])]
-                    ])
-    R_z = np.array([[np.cos(theta[2]), -np.sin(theta[2]), 0],
-                    [np.sin(theta[2]), np.cos(theta[2]), 0],
-                    [0, 0, 1]
-                    ])
-    R = np.dot(R_z, np.dot(R_y, R_x))
-    return R
+import simulation as sim
+
 
 def getEllipseParams(fit):
     (xc, yc), (a, b), theta = fit
@@ -36,72 +22,6 @@ def getEllipseParams(fit):
     F = A * xc ** 2 + B * xc * yc + C * yc ** 2 - a ** 2 * b ** 2
 
     return A,B,C,D,E,F
-
-
-class Camera:
-    def __init__(self, rMat, pos, cameraMatrix, distCoeffs):
-        self.yaw = 0        # wrt world frame
-        self.pitch = 0
-        self.roll = 0
-        self.rMat = rMat
-        self.pos = pos      # wrt world frame
-        self.cameraMatrix = cameraMatrix
-        self.distCoeffs = distCoeffs
-
-    def update(self):
-        self.rMat = RotationMatrix([self.pitch, self.yaw, self.roll])
-
-    # projects 3d points from world frame to 2d camera image
-    def project(self, points):
-        # points = np.array(list(filter(lambda x: x[2] > 0, points)))
-
-        # y-axis is used as projection axis
-        M = np.dot(np.array([[1, 0, 0], [0, 0, 1], [0, -1, 0]]), self.rMat)
-
-        tvec = -np.dot(np.transpose(M), self.pos)
-        rvec = cv2.Rodrigues(np.transpose(M))[0]
-        return cv2.projectPoints(points, rvec, tvec, self.cameraMatrix, self.distCoeffs)[0].astype(np.int64)
-
-
-def create_grid(rows, cols, length):
-    grid = np.zeros([rows,cols,3])
-    for i in range(rows):
-        for j in range(cols):
-            grid[i][j]=[i*length-(rows-1)*length/2, j*length-(cols-1)*length/2,0]
-    return grid
-
-def create_hoop(r, px,py,pz):
-    hoop = np.zeros([41,3])
-    for i in range(41):
-        hoop[i] = [px+r*np.cos(i*np.pi/20), py, pz+r*np.sin(i*np.pi/20)]
-    return hoop
-    
-
-def project_grid(grid, cam):
-    return np.array([
-        cam.project(row)
-        for row in grid])
-
-def draw_grid(grid, img, cam):
-    pgrid = project_grid(grid, cam)
-    for i in range(pgrid.shape[0]):         # rows
-        for j in range(pgrid.shape[1]):     # cols
-            if i != 0:
-                pt1 = tuple(pgrid[i][j][0])
-                pt2 = tuple(pgrid[i-1][j][0])
-                cv2.line(img, pt1, pt2, (0,255,0),1)
-            if j != 0:
-                pt1 = tuple(pgrid[i][j][0])
-                pt2 = tuple(pgrid[i][j-1][0])
-                cv2.line(img, pt1, pt2, (0,255,0),1)
-
-def draw_hoop(hoop, img, cam):
-    phoop = cam.project(hoop)
-    for i in range(phoop.shape[0]):     # number of points
-        if i != 0:
-            pt1 = tuple(phoop[i][0])
-            pt2 = tuple(phoop[i-1][0])
-            cv2.line(img, pt1, pt2, (0, 255, 0), 1)
 
 
 def update_orientation(event, x, y, flags, params):
@@ -121,7 +41,7 @@ def update_orientation(event, x, y, flags, params):
 dragging = False
 xi, yi = -1, -1
 
-cam1 = Camera(
+cam1 = sim.Camera(
     rMat=np.identity(3),
     pos=np.array([[0.], [-5.], [2.]]),
     cameraMatrix=np.array([[6.e+02, 0., 768.], [0., 6.e+02, 432.], [0., 0., 1.]]),
@@ -137,8 +57,8 @@ S3 = -1
 f=600
 r=0.375
 
-grid = create_grid(10, 10, 0.3)
-hoop = create_hoop(1, px=0, py=0, pz=2)
+grid = sim.create_grid(10, 10, 0.3)
+hoop = sim.create_hoop(1, px=0, py=0, pz=2)
 #hoop2 = create_hoop(1, px=3, py=0, pz=2)
 
 cv2.namedWindow('simulation')
@@ -152,8 +72,8 @@ while True:
     frame1 = np.zeros((864,1536,3), dtype = np.uint8)  # cv2.imread("images.jpg")
     frame2 = np.zeros((864, 1536, 3), dtype=np.uint8)  # shape = (480, 640, 3)
 
-    draw_grid(grid, frame1, cam1)
-    draw_hoop(hoop, frame1, cam1)
+    sim.draw_grid(grid, frame1, cam1)
+    sim.draw_hoop(hoop, frame1, cam1)
     #draw_hoop(hoop2, frame1, cam1)
 
 
