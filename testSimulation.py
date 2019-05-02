@@ -48,17 +48,20 @@ cam1 = sim.Camera(
     distCoeffs=np.array([0., 0., 0., 0., 0.])
     )
 
+
+
 # Tunable
 alpha = 0
 S1 = -1
-S2 = -1
-S3 = -1
+S2 = 1
+S3 = 1
 
 f=600
 r=0.375
 
 grid = sim.create_grid(10, 10, 0.3)
 hoop = sim.create_hoop(1, px=0, py=0, pz=2)
+square = sim.create_square(1, px=0, py=0, pz=2)
 #hoop2 = create_hoop(1, px=3, py=0, pz=2)
 
 cv2.namedWindow('simulation')
@@ -69,11 +72,12 @@ fit_ellipse = False
 while True:
     cam1.update()
     # using screen resolution of 1536x864
-    frame1 = np.zeros((864,1536,3), dtype = np.uint8)  # cv2.imread("images.jpg")
+    frame1 = np.zeros((864, 1536, 3), dtype=np.uint8)  # cv2.imread("images.jpg")
     frame2 = np.zeros((864, 1536, 3), dtype=np.uint8)  # shape = (480, 640, 3)
 
     sim.draw_grid(grid, frame1, cam1)
     sim.draw_hoop(hoop, frame1, cam1)
+    sim.draw_square(square, frame1, cam1)
     #draw_hoop(hoop2, frame1, cam1)
 
 
@@ -109,23 +113,23 @@ while True:
         Nvector = V * np.array([S2 * h, 0, -S1 * g])
 
         rvec, _ = cv2.Rodrigues(Rc)
-        tvec = np.array([[0.], [0.], [3.]])
+        tvec = Cvector
 
         cv2.aruco.drawAxis(frame1, cam1.cameraMatrix, cam1.distCoeffs, rvec, tvec, 0.1)
 
 
-    cv2.rectangle(frame1, (10, 10), (310, 320), (0, 0, 0), -1)
-    cv2.rectangle(frame1, (10, 10), (310, 320), (0, 255, 0), 1)
-
-    cv2.putText(frame1, "position:", (20, 40), cv2.FONT_HERSHEY_SIMPLEX, 1.0, (0, 255, 0))
-    cv2.putText(frame1, "x={:.2f}".format(cam1.pos[0][0]), (20, 70), cv2.FONT_HERSHEY_SIMPLEX, 1.0, (0, 255, 0))
-    cv2.putText(frame1, "y={:.2f}".format(cam1.pos[1][0]), (20, 100), cv2.FONT_HERSHEY_SIMPLEX, 1.0, (0, 255, 0))
-    cv2.putText(frame1, "z={:.2f}".format(cam1.pos[2][0]), (20, 130), cv2.FONT_HERSHEY_SIMPLEX, 1.0, (0, 255, 0))
-
-    cv2.putText(frame1, "orientation:", (20, 190), cv2.FONT_HERSHEY_SIMPLEX, 1.0, (0, 255, 0))
-    cv2.putText(frame1, "yaw={:.2f}".format(cam1.yaw*180/np.pi), (20, 220), cv2.FONT_HERSHEY_SIMPLEX, 1.0, (0, 255, 0))
-    cv2.putText(frame1, "pitch={:.2f}".format(cam1.pitch*180/np.pi), (20, 250), cv2.FONT_HERSHEY_SIMPLEX, 1.0, (0, 255, 0))
-    cv2.putText(frame1, "roll={:.2f}".format(cam1.roll*180/np.pi), (20, 280), cv2.FONT_HERSHEY_SIMPLEX, 1.0, (0, 255, 0))
+    # cv2.rectangle(frame1, (10, 10), (310, 320), (0, 0, 0), -1)
+    # cv2.rectangle(frame1, (10, 10), (310, 320), (0, 255, 0), 1)
+    #
+    # cv2.putText(frame1, "position:", (20, 40), cv2.FONT_HERSHEY_SIMPLEX, 1.0, (0, 255, 0))
+    # cv2.putText(frame1, "x={:.2f}".format(cam1.pos[0][0]), (20, 70), cv2.FONT_HERSHEY_SIMPLEX, 1.0, (0, 255, 0))
+    # cv2.putText(frame1, "y={:.2f}".format(cam1.pos[1][0]), (20, 100), cv2.FONT_HERSHEY_SIMPLEX, 1.0, (0, 255, 0))
+    # cv2.putText(frame1, "z={:.2f}".format(cam1.pos[2][0]), (20, 130), cv2.FONT_HERSHEY_SIMPLEX, 1.0, (0, 255, 0))
+    #
+    # cv2.putText(frame1, "orientation:", (20, 190), cv2.FONT_HERSHEY_SIMPLEX, 1.0, (0, 255, 0))
+    # cv2.putText(frame1, "yaw={:.2f}".format(cam1.yaw*180/np.pi), (20, 220), cv2.FONT_HERSHEY_SIMPLEX, 1.0, (0, 255, 0))
+    # cv2.putText(frame1, "pitch={:.2f}".format(cam1.pitch*180/np.pi), (20, 250), cv2.FONT_HERSHEY_SIMPLEX, 1.0, (0, 255, 0))
+    # cv2.putText(frame1, "roll={:.2f}".format(cam1.roll*180/np.pi), (20, 280), cv2.FONT_HERSHEY_SIMPLEX, 1.0, (0, 255, 0))
 
     control = cv2.waitKeyEx(1)
 
@@ -149,7 +153,6 @@ while True:
         cam1.roll += 0.01
     if control == 2424832:          # left arrow
         cam1.roll -= 0.01
-    print (control)
 
     cv2.imshow("simulation", frame1)
 

@@ -58,6 +58,15 @@ def create_hoop(r, px, py, pz):
         hoop[i] = [px + r * np.cos(i * np.pi / 20), py, pz + r * np.sin(i * np.pi / 20)]
     return hoop
 
+def create_square(r, px, py, pz):
+    square = np.zeros([5,3])
+    square[0] = [px - r, py, pz - r]
+    square[1] = [px - r, py, pz + r]
+    square[2] = [px + r, py, pz + r]
+    square[3] = [px + r, py, pz - r]
+    square[4] = [px - r, py, pz - r]
+    return square
+
 
 def project_grid(grid, cam):
     return np.array([
@@ -72,11 +81,11 @@ def draw_grid(grid, img, cam):
             if i != 0:
                 pt1 = tuple(pgrid[i][j][0])
                 pt2 = tuple(pgrid[i - 1][j][0])
-                cv2.line(img, pt1, pt2, (0, 255, 0), 1)
+                cv2.line(img, pt1, pt2, (100, 100, 100), 1)
             if j != 0:
                 pt1 = tuple(pgrid[i][j][0])
                 pt2 = tuple(pgrid[i][j - 1][0])
-                cv2.line(img, pt1, pt2, (0, 255, 0), 1)
+                cv2.line(img, pt1, pt2, (100, 100, 100), 1)
 
 
 def draw_hoop(hoop, img, cam):
@@ -85,4 +94,13 @@ def draw_hoop(hoop, img, cam):
         if i != 0:
             pt1 = tuple(phoop[i][0])
             pt2 = tuple(phoop[i - 1][0])
+            cv2.line(img, pt1, pt2, (0, 255, 0), 1)
+
+
+def draw_square(square, img, cam):
+    psquare = cam.project(square)
+    for i in range(psquare.shape[0]):  # number of points
+        if i != 0:
+            pt1 = tuple(psquare[i][0])
+            pt2 = tuple(psquare[i - 1][0])
             cv2.line(img, pt1, pt2, (0, 255, 0), 1)
