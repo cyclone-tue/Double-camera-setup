@@ -69,6 +69,19 @@ cv2.setMouseCallback('simulation', update_orientation)
 
 fit_ellipse = False
 
+
+######## S jes instelbaar #######################
+def nothing(x):
+    pass
+
+
+cv2.namedWindow("SJES")
+cv2.createTrackbar("S1", "SJES", 0, 2, nothing)
+cv2.createTrackbar("S2", "SJES", 0, 2, nothing)
+cv2.createTrackbar("S3", "SJES", 0, 2, nothing)
+##################################################
+
+
 while True:
     cam1.update()
     # using screen resolution of 1536x864
@@ -80,7 +93,9 @@ while True:
     sim.draw_square(square, frame1, cam1)
     #draw_hoop(hoop2, frame1, cam1)
 
-
+    S1 = -1 + cv2.getTrackbarPos("S1", "SJES")
+    S2 = -1 + cv2.getTrackbarPos("S2", "SJES")
+    S3 = -1 + cv2.getTrackbarPos("S3", "SJES")
 
     if fit_ellipse:
         fit = cv2.fitEllipse(cam1.project(hoop))
