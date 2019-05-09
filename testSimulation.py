@@ -43,7 +43,7 @@ xi, yi = -1, -1
 
 cam1 = sim.Camera(
     rMat=np.identity(3),
-    pos=np.array([[0.], [-5.], [2.]]),
+    pos=np.array([[0.], [-1.], [0]]),
     cameraMatrix=np.array([[6.e+02, 0., 768.], [0., 6.e+02, 432.], [0., 0., 1.]]),
     distCoeffs=np.array([0., 0., 0., 0., 0.])
     )
@@ -60,9 +60,21 @@ f=600
 r=0.375
 
 grid = sim.create_grid(10, 10, 0.3)
-hoop = sim.create_hoop(1, px=0, py=0, pz=2)
-square = sim.create_square(1, px=0, py=0, pz=2)
+hoop = sim.create_hoop(1, px=0, py=0, pz=0)
+square = sim.create_square(1, px=0, py=0, pz=0)
 #hoop2 = create_hoop(1, px=3, py=0, pz=2)
+
+##### To find h ####
+basevec = np.zeros([1, 3])
+basevec[0][0] = 0.5*np.sqrt(2)
+basevec[0][1] = 0
+basevec[0][2] = 0.5*np.sqrt(2)
+h = cam1.project(basevec)
+h = h - [768, 432]
+print(basevec)
+print("projection is")
+print(h)
+
 
 cv2.namedWindow('simulation')
 cv2.setMouseCallback('simulation', update_orientation)
@@ -135,12 +147,12 @@ while True:
 
     # cv2.rectangle(frame1, (10, 10), (310, 320), (0, 0, 0), -1)
     # cv2.rectangle(frame1, (10, 10), (310, 320), (0, 255, 0), 1)
-    #
+
     # cv2.putText(frame1, "position:", (20, 40), cv2.FONT_HERSHEY_SIMPLEX, 1.0, (0, 255, 0))
     # cv2.putText(frame1, "x={:.2f}".format(cam1.pos[0][0]), (20, 70), cv2.FONT_HERSHEY_SIMPLEX, 1.0, (0, 255, 0))
     # cv2.putText(frame1, "y={:.2f}".format(cam1.pos[1][0]), (20, 100), cv2.FONT_HERSHEY_SIMPLEX, 1.0, (0, 255, 0))
     # cv2.putText(frame1, "z={:.2f}".format(cam1.pos[2][0]), (20, 130), cv2.FONT_HERSHEY_SIMPLEX, 1.0, (0, 255, 0))
-    #
+
     # cv2.putText(frame1, "orientation:", (20, 190), cv2.FONT_HERSHEY_SIMPLEX, 1.0, (0, 255, 0))
     # cv2.putText(frame1, "yaw={:.2f}".format(cam1.yaw*180/np.pi), (20, 220), cv2.FONT_HERSHEY_SIMPLEX, 1.0, (0, 255, 0))
     # cv2.putText(frame1, "pitch={:.2f}".format(cam1.pitch*180/np.pi), (20, 250), cv2.FONT_HERSHEY_SIMPLEX, 1.0, (0, 255, 0))
