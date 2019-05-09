@@ -6,10 +6,12 @@ import itertools
 
 import simulation as sim
 
-
 def getEllipseParams(fit):
     (xc, yc), (a, b), theta = fit
 
+
+    xc=xc-768
+    yc=-yc+432
     a=a/2
     b=b/2
     theta = theta*np.pi/180
@@ -71,15 +73,15 @@ cv2.setMouseCallback('simulation', update_orientation)
 fit_ellipse = False
 
 ##### To find h ####
-basevec = np.zeros([1, 3])
-basevec[0][0] = 0.5*np.sqrt(2)
-basevec[0][1] = 0
-basevec[0][2] = 0.5*np.sqrt(2)
-h = cam1.project(basevec)
-h = h - [768, 432]
-print(basevec)
-print("projection is")
-print(h)
+#basevec = np.zeros([1, 3])
+#basevec[0][0] = 0.5*np.sqrt(2)
+#basevec[0][1] = 0
+#basevec[0][2] = 0.5*np.sqrt(2)
+#h = cam1.project(basevec)
+#h = h - [768, 432]
+#print(basevec)
+#print("projection is")
+#print(h)
 
 
 ######## S jes instelbaar #######################
