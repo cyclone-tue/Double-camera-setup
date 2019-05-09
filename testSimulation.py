@@ -64,6 +64,12 @@ hoop = sim.create_hoop(1, px=0, py=0, pz=0)
 square = sim.create_square(1, px=0, py=0, pz=0)
 #hoop2 = create_hoop(1, px=3, py=0, pz=2)
 
+
+cv2.namedWindow('simulation')
+cv2.setMouseCallback('simulation', update_orientation)
+
+fit_ellipse = False
+
 ##### To find h ####
 basevec = np.zeros([1, 3])
 basevec[0][0] = 0.5*np.sqrt(2)
@@ -74,12 +80,6 @@ h = h - [768, 432]
 print(basevec)
 print("projection is")
 print(h)
-
-
-cv2.namedWindow('simulation')
-cv2.setMouseCallback('simulation', update_orientation)
-
-fit_ellipse = False
 
 
 ######## S jes instelbaar #######################
