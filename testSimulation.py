@@ -165,7 +165,9 @@ while True:
         Nvector = V * np.array([S2 * h, 0, -S1 * g])
 
         rvec, _ = cv2.Rodrigues(Rc)
-        tvec = Cvector ### Correction for minus sign in the translation vector
+        tvec = Cvector-cam1.pos
+        print(tvec)
+
 
         cv2.aruco.drawAxis(frame1, cam1.cameraMatrix, cam1.distCoeffs, rvec, tvec, 0.1)
 

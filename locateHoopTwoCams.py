@@ -8,7 +8,7 @@ def centercoor(hoopx1, hoopy1, hoopx2, cam1, cam2):
     z = d/(hoopx1 * h1 - hoopx2 * h2)
     x = z * hoopx1 * h1
     y = z * hoopy1 * h2
-    coorditates = np.array([[x], [y], [z]])
+    coorditates = np.array([x, y, z])
     return coorditates
 
 
