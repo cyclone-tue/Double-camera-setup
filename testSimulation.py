@@ -45,7 +45,7 @@ xi, yi = -1, -1
 
 cam1 = sim.Camera(
     rMat=np.identity(3),
-    pos=np.array([[0.], [-1.], [0]]),
+    pos=np.array([[0.], [-1.], [0]]),     # 2e coordinaat is z axis???
     cameraMatrix=np.array([[6.e+02, 0., 768.], [0., 6.e+02, 432.], [0., 0., 1.]]),
     distCoeffs=np.array([0., 0., 0., 0., 0.])
     )
@@ -142,7 +142,7 @@ while True:
         Nvector = V * np.array([S2 * h, 0, -S1 * g])
 
         rvec, _ = cv2.Rodrigues(Rc)
-        tvec = Cvector
+        tvec = np.array([[-1,0,0],[0,1,0],[0,0,1]]).dot(Cvector) ### Correction for minus sign in the translation vector
 
         cv2.aruco.drawAxis(frame1, cam1.cameraMatrix, cam1.distCoeffs, rvec, tvec, 0.1)
 
