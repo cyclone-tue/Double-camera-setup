@@ -6,10 +6,12 @@ import itertools
 
 import simulation as sim
 
-
 def getEllipseParams(fit):
     (xc, yc), (a, b), theta = fit
 
+
+    xc=xc-768
+    yc=-yc+432
     a=a/2
     b=b/2
     theta = theta*np.pi/180
@@ -66,14 +68,39 @@ f=600
 r=0.375
 
 grid = sim.create_grid(10, 10, 0.3)
-hoop = sim.create_hoop(1, px=0, py=0, pz=2)
-square = sim.create_square(1, px=0, py=0, pz=2)
+hoop = sim.create_hoop(1, px=0, py=0, pz=0)
+square = sim.create_square(1, px=0, py=0, pz=0)
 #hoop2 = create_hoop(1, px=3, py=0, pz=2)
+
 
 cv2.namedWindow('simulation')
 cv2.setMouseCallback('simulation', update_orientation)
 
 fit_ellipse = False
+
+##### To find h ####
+#basevec = np.zeros([1, 3])
+#basevec[0][0] = 0.5*np.sqrt(2)
+#basevec[0][1] = 0
+#basevec[0][2] = 0.5*np.sqrt(2)
+#h = cam1.project(basevec)
+#h = h - [768, 432]
+#print(basevec)
+#print("projection is")
+#print(h)
+
+
+######## S jes instelbaar #######################
+def nothing(x):
+    pass
+
+
+cv2.namedWindow("SJES")
+cv2.createTrackbar("S1", "SJES", 0, 2, nothing)
+cv2.createTrackbar("S2", "SJES", 0, 2, nothing)
+cv2.createTrackbar("S3", "SJES", 0, 2, nothing)
+##################################################
+
 
 while True:
     dcam.update()
@@ -90,7 +117,9 @@ while True:
     sim.draw_square(square, frame2, cam2)
     #draw_hoop(hoop2, frame1, cam1)
 
-
+    S1 = -1 + cv2.getTrackbarPos("S1", "SJES")
+    S2 = -1 + cv2.getTrackbarPos("S2", "SJES")
+    S3 = -1 + cv2.getTrackbarPos("S3", "SJES")
 
     if fit_ellipse:
         fit = cv2.fitEllipse(cam1.project(hoop))
@@ -123,18 +152,15 @@ while True:
         Nvector = V * np.array([S2 * h, 0, -S1 * g])
 
         rvec, _ = cv2.Rodrigues(Rc)
-        tvec = Cvector
+        tvec = np.array([[-1,0,0],[0,1,0],[0,0,1]]).dot(Cvector) ### Correction for minus sign in the translation vector
 
         cv2.aruco.drawAxis(frame1, cam1.cameraMatrix, cam1.distCoeffs, rvec, tvec, 0.1)
 
-    cv2.rectangle(frame1, (0, 0), (960, 720), (255, 255, 255), 1)
-    cv2.rectangle(frame2, (0, 0), (960, 720), (255, 255, 255), 1)
-    #
     # cv2.putText(frame1, "position:", (20, 40), cv2.FONT_HERSHEY_SIMPLEX, 1.0, (0, 255, 0))
     # cv2.putText(frame1, "x={:.2f}".format(cam1.pos[0][0]), (20, 70), cv2.FONT_HERSHEY_SIMPLEX, 1.0, (0, 255, 0))
     # cv2.putText(frame1, "y={:.2f}".format(cam1.pos[1][0]), (20, 100), cv2.FONT_HERSHEY_SIMPLEX, 1.0, (0, 255, 0))
     # cv2.putText(frame1, "z={:.2f}".format(cam1.pos[2][0]), (20, 130), cv2.FONT_HERSHEY_SIMPLEX, 1.0, (0, 255, 0))
-    #
+
     # cv2.putText(frame1, "orientation:", (20, 190), cv2.FONT_HERSHEY_SIMPLEX, 1.0, (0, 255, 0))
     # cv2.putText(frame1, "yaw={:.2f}".format(cam1.yaw*180/np.pi), (20, 220), cv2.FONT_HERSHEY_SIMPLEX, 1.0, (0, 255, 0))
     # cv2.putText(frame1, "pitch={:.2f}".format(cam1.pitch*180/np.pi), (20, 250), cv2.FONT_HERSHEY_SIMPLEX, 1.0, (0, 255, 0))
