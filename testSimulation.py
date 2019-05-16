@@ -5,6 +5,7 @@ from numpy import linalg as LA
 import itertools
 
 import simulation as sim
+from locateHoopTwoCams import centercoor
 
 def getEllipseParams(fit):
     (xc, yc), (a, b), theta = fit
@@ -44,14 +45,14 @@ xi, yi = -1, -1
 
 cam1 = sim.Camera(
     rMat=np.identity(3),
-    pos=np.array([[-1], [-5.], [2.]]),
+    pos=np.array([[-1.], [-5.], [2.]]),
     cameraMatrix=np.array([[6.e+02, 0., 1.5*320.], [0., 6.e+02, 1.5*240.], [0., 0., 1.]]),
     distCoeffs=np.array([0., 0., 0., 0., 0.])
     )
 
 cam2 = sim.Camera(
     rMat=np.identity(3),
-    pos=np.array([[1], [-5.], [2.]]),
+    pos=np.array([[1.], [-5.], [2.]]),
     cameraMatrix=np.array([[6.e+02, 0., 1.5*320.], [0., 6.e+02, 1.5*240.], [0., 0., 1.]]),
     distCoeffs=np.array([0., 0., 0., 0., 0.])
     )
@@ -68,8 +69,8 @@ f=600
 r=0.375
 
 grid = sim.create_grid(10, 10, 0.3)
-hoop = sim.create_hoop(1, px=0, py=0, pz=0)
-square = sim.create_square(1, px=0, py=0, pz=0)
+hoop = sim.create_hoop(1, px=0, py=0, pz=2)
+square = sim.create_square(1, px=0, py=0, pz=2)
 #hoop2 = create_hoop(1, px=3, py=0, pz=2)
 
 
@@ -115,17 +116,28 @@ while True:
     sim.draw_grid(grid, frame2, cam2)
     sim.draw_hoop(hoop, frame2, cam2)
     sim.draw_square(square, frame2, cam2)
-    #draw_hoop(hoop2, frame1, cam1)
+
+    cv2.rectangle(frame1, (0, 0), (960, 720), (255, 255, 255), 1)
+    cv2.rectangle(frame2, (0, 0), (960, 720), (255, 255, 255), 1)
 
     S1 = -1 + cv2.getTrackbarPos("S1", "SJES")
     S2 = -1 + cv2.getTrackbarPos("S2", "SJES")
     S3 = -1 + cv2.getTrackbarPos("S3", "SJES")
 
     if fit_ellipse:
-        fit = cv2.fitEllipse(cam1.project(hoop))
-        cv2.ellipse(frame1, fit, (255, 0, 0), 5)
+        fit1 = cv2.fitEllipse(cam1.project(hoop))
+        fit2 = cv2.fitEllipse(cam2.project(hoop))
+        cv2.ellipse(frame1, fit1, (255, 0, 0), 5)
+        cv2.ellipse(frame2, fit2, (255, 0, 0), 5)
 
-        A, B, C, D, E, F = getEllipseParams(fit)
+        (x1, y1), _, _ = fit1
+        (x2, y2), _, _ = fit2
+        x1 = x1 - 768
+        y1 = -y1 + 432
+        x2 = x2 - 768
+        y2 = -y2 + 432
+
+        A, B, C, D, E, F = getEllipseParams(fit1)
         Qe = np.array([[A, B, -D / f], [B, C, -E / f], [-D / f, -E / f, F / f ** 2]])
         w, V = LA.eig(Qe)
 
@@ -148,11 +160,12 @@ while True:
 
         z0 = S3 * l2 * r / np.sqrt(-l1 * l3)
         Cvector = z0 * V.dot(np.array([[S2 * l3 / l2 * h], [0], [-S1 * l1 / l2 * g]]))
+        Cvector = centercoor(x1, y1, x2, cam1, cam2)
 
         Nvector = V * np.array([S2 * h, 0, -S1 * g])
 
         rvec, _ = cv2.Rodrigues(Rc)
-        tvec = np.array([[-1,0,0],[0,1,0],[0,0,1]]).dot(Cvector) ### Correction for minus sign in the translation vector
+        tvec = Cvector ### Correction for minus sign in the translation vector
 
         cv2.aruco.drawAxis(frame1, cam1.cameraMatrix, cam1.distCoeffs, rvec, tvec, 0.1)
 
