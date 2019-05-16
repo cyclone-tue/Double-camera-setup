@@ -31,8 +31,7 @@ def update_orientation(event, x, y, flags, params):
         xi, yi = x, y
     elif event == cv2.EVENT_MOUSEMOVE:
         if dragging:
-            cam1.yaw += -np.pi*(x-xi)/1536
-            cam1.pitch += np.pi*(y-yi)/(2*864)
+            dcam.rotate(-np.pi*(x-xi)/1536, np.pi*(y-yi)/(2*864), 0)
             xi, yi = x, y
     elif event == cv2.EVENT_LBUTTONUP:
         dragging = False
@@ -43,12 +42,19 @@ xi, yi = -1, -1
 
 cam1 = sim.Camera(
     rMat=np.identity(3),
-    pos=np.array([[0.], [-5.], [2.]]),
-    cameraMatrix=np.array([[6.e+02, 0., 768.], [0., 6.e+02, 432.], [0., 0., 1.]]),
+    pos=np.array([[-1], [-5.], [2.]]),
+    cameraMatrix=np.array([[6.e+02, 0., 1.5*320.], [0., 6.e+02, 1.5*240.], [0., 0., 1.]]),
     distCoeffs=np.array([0., 0., 0., 0., 0.])
     )
 
+cam2 = sim.Camera(
+    rMat=np.identity(3),
+    pos=np.array([[1], [-5.], [2.]]),
+    cameraMatrix=np.array([[6.e+02, 0., 1.5*320.], [0., 6.e+02, 1.5*240.], [0., 0., 1.]]),
+    distCoeffs=np.array([0., 0., 0., 0., 0.])
+    )
 
+dcam = sim.DoubleCamera(np.array([[0], [-5.], [2.]]), cam1, cam2)
 
 # Tunable
 alpha = 0
@@ -70,14 +76,18 @@ cv2.setMouseCallback('simulation', update_orientation)
 fit_ellipse = False
 
 while True:
-    cam1.update()
+    dcam.update()
     # using screen resolution of 1536x864
-    frame1 = np.zeros((864, 1536, 3), dtype=np.uint8)  # cv2.imread("images.jpg")
-    frame2 = np.zeros((864, 1536, 3), dtype=np.uint8)  # shape = (480, 640, 3)
+    frame1 = np.zeros((720, 960, 3), dtype=np.uint8)  # cv2.imread("images.jpg")
+    frame2 = np.zeros((720, 960, 3), dtype=np.uint8)  # shape = (480, 640, 3)
 
     sim.draw_grid(grid, frame1, cam1)
     sim.draw_hoop(hoop, frame1, cam1)
     sim.draw_square(square, frame1, cam1)
+
+    sim.draw_grid(grid, frame2, cam2)
+    sim.draw_hoop(hoop, frame2, cam2)
+    sim.draw_square(square, frame2, cam2)
     #draw_hoop(hoop2, frame1, cam1)
 
 
@@ -117,9 +127,8 @@ while True:
 
         cv2.aruco.drawAxis(frame1, cam1.cameraMatrix, cam1.distCoeffs, rvec, tvec, 0.1)
 
-
-    # cv2.rectangle(frame1, (10, 10), (310, 320), (0, 0, 0), -1)
-    # cv2.rectangle(frame1, (10, 10), (310, 320), (0, 255, 0), 1)
+    cv2.rectangle(frame1, (0, 0), (960, 720), (255, 255, 255), 1)
+    cv2.rectangle(frame2, (0, 0), (960, 720), (255, 255, 255), 1)
     #
     # cv2.putText(frame1, "position:", (20, 40), cv2.FONT_HERSHEY_SIMPLEX, 1.0, (0, 255, 0))
     # cv2.putText(frame1, "x={:.2f}".format(cam1.pos[0][0]), (20, 70), cv2.FONT_HERSHEY_SIMPLEX, 1.0, (0, 255, 0))
@@ -138,22 +147,23 @@ while True:
     if control == 102:
         fit_ellipse = not fit_ellipse
     if control == 119:              # w          FORWARD
-        cam1.pos[1] = cam1.pos[1] + 0.1
+        dcam.translate(0, 0.1, 0)
     if control == 115:              # s          BACKWARD
-        cam1.pos[1] = cam1.pos[1] - 0.1
+        dcam.translate(0, -0.1, 0)
     if control == 100:              # d          RIGHT
-        cam1.pos[0] = cam1.pos[0] + 0.1
+        dcam.translate(0.1, 0, 0)
     if control == 97:               # a          LEFT
-        cam1.pos[0] = cam1.pos[0] - 0.1
+        dcam.translate(-0.1, 0, 0)
     if control == 2490368:          # up arrow   UP
-        cam1.pos[2] = cam1.pos[2] + 0.1
+        dcam.translate(0, 0, 0.1)
     if control == 2621440:          # down arrow DOWN
-        cam1.pos[2] = cam1.pos[2] - 0.1
+        dcam.translate(0, 0, -0.1)
     if control == 2555904:          # right arrow
-        cam1.roll += 0.01
+        dcam.rotate(0, 0, 0.01)
     if control == 2424832:          # left arrow
-        cam1.roll -= 0.01
+        dcam.rotate(0, 0, -0.01)
 
-    cv2.imshow("simulation", frame1)
+    vis = np.hstack((frame1, frame2))
+    cv2.imshow("simulation", vis)
 
 cv2.destroyAllWindows()

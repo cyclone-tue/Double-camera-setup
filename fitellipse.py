@@ -162,8 +162,8 @@ while True:
         cv2.aruco.drawAxis(frame, cameraMatrix, distCoeffs, rvec, tvec, 0.1)
         #cv2.circle(frame, (int(xc),int(yc)), 10, (255,0,0))
 
-    #cv2.imshow("rgb",combined)
-    #cv2.imshow("filtered",weirdFilter(combined))
+    cv2.imshow("rgb",combined)
+    cv2.imshow("filtered",weirdFilter(combined))
     cv2.imshow("overlap",RGB)
     cv2.imshow("Frame+ellipse", frame)
 

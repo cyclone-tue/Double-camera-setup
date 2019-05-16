@@ -44,6 +44,48 @@ class Camera:
         return cv2.projectPoints(points, rvec, tvec, self.cameraMatrix, self.distCoeffs)[0].astype(np.int64)
 
 
+class DoubleCamera(Camera):
+    def __init__(self, pos, cam1, cam2):
+        self.yaw = 0  # wrt world frame
+        self.pitch = 0
+        self.roll = 0
+        self.rMat = np.identity(3)
+        self.pos = pos
+        self.cam1 = cam1
+        self.cam2 = cam2
+
+    def update(self):
+        self.rMat = RotationMatrix([self.pitch, self.yaw, self.roll])
+        self.cam1.update()
+        self.cam2.update()
+
+    def translate(self, dx, dy, dz):
+        vector = np.array([[dx], [dy], [dz]])
+        self.pos += vector
+        self.cam1.pos += vector
+        self.cam2.pos += vector
+
+    def rotate(self, yaw, pitch, roll):
+        self.yaw += roll
+        self.pitch += pitch
+        self.roll += yaw
+
+        self.cam1.yaw += yaw
+        self.cam1.pitch += pitch
+        self.cam1.roll += roll
+
+        self.cam2.yaw += yaw
+        self.cam2.pitch += pitch
+        self.cam2.roll += roll
+
+        # update postions
+        self.cam1.pos = self.pos + np.dot(np.transpose(self.rMat), (self.cam1.pos - self.pos))
+        self.cam2.pos = self.pos + np.dot(np.transpose(self.rMat), (self.cam2.pos - self.pos))
+        self.update()
+        self.cam1.pos = self.pos + np.dot(self.rMat, (self.cam1.pos - self.pos))
+        self.cam2.pos = self.pos + np.dot(self.rMat, (self.cam2.pos - self.pos))
+
+
 def create_grid(rows, cols, length):
     grid = np.zeros([rows, cols, 3])
     for i in range(rows):
