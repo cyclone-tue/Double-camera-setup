@@ -24,7 +24,7 @@ def rotation_matrix(theta):
 
 
 class Camera:
-    def __init__(self, cameraMatrix, distCoeffs, pos=np.zeros(3), theta=np.zeros(3)):
+    def __init__(self, pos, theta, cameraMatrix, distCoeffs):
         # pose
         self.pos = pos
         self.theta = theta
@@ -78,13 +78,13 @@ class Camera:
         if key == 2621440:  # down arrow    DOWN
             self.translate([0, 0, 0.1])
         if key == 2555904:  # right arrow   ROLL CLOCKWISE
-            self.rotate([0.01, 0, 0])
+            self.rotate([0.1, 0, 0])
         if key == 2424832:  # left arrow    ROLL COUNTER CLOCKWISE
-            self.rotate([-0.01, 0, 0])
+            self.rotate([-0.1, 0, 0])
 
 
 class DoubleCamera(Camera):
-    def __init__(self, cam1, cam2, pos=np.zeros(3)):
+    def __init__(self, cam1, cam2, pos):
         # cameras
         self.cam1 = cam1
         self.cam2 = cam2

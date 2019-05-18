@@ -5,13 +5,16 @@ from locateHoopTwoCams import centercoor
 
 
 cam1 = sim.Camera(
-    pos=np.array([-5., -0.1, -2.]),
+    pos=np.array([-5., -1., -2.]),
+    theta=np.zeros(3),
     cameraMatrix=np.array([[6.e+02, 0., 1.5*320.], [0., 6.e+02, 1.5*240.], [0., 0., 1.]]),
     distCoeffs=np.array([0., 0., 0., 0., 0.])
     )
 
+
 cam2 = sim.Camera(
-    pos=np.array([-5., 0.1, -2.]),
+    pos=np.array([-5., 1., -2.]),
+    theta=np.zeros(3),
     cameraMatrix=np.array([[6.e+02, 0., 1.5*320.], [0., 6.e+02, 1.5*240.], [0., 0., 1.]]),
     distCoeffs=np.array([0., 0., 0., 0., 0.])
     )
@@ -21,6 +24,7 @@ dcam = sim.DoubleCamera(
     cam2=cam2,
     pos=np.array([-5., 0., -2.])
 )
+
 
 # creating graphics
 grid = sim.create_grid(10, 10, 0.3)
@@ -56,6 +60,26 @@ while True:
 
         cv2.ellipse(frame1, fit1, (255, 0, 0), 5)
         cv2.ellipse(frame2, fit2, (255, 0, 0), 5)
+
+        # draw ellipse long and short axis  (RED = LONG AXIS) (BLUE = SHORT AXIS)
+        (xc, yc), (ma, MA), theta = fit1
+        theta = theta * np.pi / 180
+        a, b = MA/2, ma/2
+        cv2.circle(frame1, (int(xc), int(yc)), 2, (255, 255, 255), 1)
+        cv2.line(frame1, (int(xc), int(yc)), (int(xc - a * np.sin(theta)), int(yc + a * np.cos(theta))),
+                 (0, 0, 255), 1)
+        cv2.line(frame1, (int(xc), int(yc)), (int(xc + b * np.cos(theta)), int(yc + b * np.sin(theta))),
+                 (255, 0, 0), 1)
+
+        # draw ellipse long and short axis  (RED = LONG AXIS) (BLUE = SHORT AXIS)
+        (xc, yc), (ma, MA), theta = fit2
+        theta = theta * np.pi / 180
+        a, b = MA/2, ma/2
+        cv2.circle(frame2, (int(xc), int(yc)), 2, (255, 255, 255), 1)
+        cv2.line(frame2, (int(xc), int(yc)), (int(xc - a * np.sin(theta)), int(yc + a * np.cos(theta))),
+                 (0, 0, 255), 1)
+        cv2.line(frame2, (int(xc), int(yc)), (int(xc + b * np.cos(theta)), int(yc + b * np.sin(theta))),
+                 (255, 0, 0), 1)
 
     key = cv2.waitKeyEx(1)
     dcam.key_control(key)
