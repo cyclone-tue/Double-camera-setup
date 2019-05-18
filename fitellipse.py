@@ -17,17 +17,17 @@ S3 = -1
 f=6.3392788734453904e+02
 r=0.375
 
-markerLength = 0.141 #in meters
+markerLength = 0.141    #in meters
 
 cameraMatrix = np.array([
     [6.3392788734453904e+02, 0., 3.0808675953434488e+02],
-    [0.,6.3040138666052906e+02, 2.0155498451453073e+02],
-    [0., 0., 1. ]
+    [0., 6.3040138666052906e+02, 2.0155498451453073e+02],
+    [0., 0., 1.]
 ])
 
-distCoeffs = np.array([ 1.7802315026160684e-01, -2.2294989847251276e+00,
-       -1.5298749543854606e-02, -3.3860921093235033e-04,
-       1.3272266506874113e+01])
+distCoeffs = np.array([1.7802315026160684e-01, -2.2294989847251276e+00,
+                       -1.5298749543854606e-02, -3.3860921093235033e-04, 1.3272266506874113e+01])
+
 
 def threshold(image,values):
     low_h, low_s, low_v, high_h, high_s, high_v = values
@@ -40,21 +40,19 @@ def threshold(image,values):
         output=cv2.inRange(imconv, (low_h,low_s,low_v),(high_h, high_s, high_v))
     return output
 
+
 def weirdFilter(image):
     kernel = np.ones((10,10),np.float32)
     return cv2.filter2D(image,-1,kernel)
 
-def overlap(imred,imgreen,imblue):
-    A1 = cv2.bitwise_and(weirdFilter(imred), weirdFilter(imgreen))
-    A2 = cv2.bitwise_and(weirdFilter(imred), weirdFilter(imblue))
-    A3 = cv2.bitwise_and(weirdFilter(imgreen), weirdFilter(imblue))
-    B = cv2.bitwise_and(A1, imblue)
-    G = cv2.bitwise_and(A2, imgreen)
-    R = cv2.bitwise_and(A3, imred)
 
-    RGB = cv2.bitwise_or(R, G)
-    RGB = cv2.bitwise_or(RGB, B)
-    return RGB
+def overlap(imred, imgreen, imblue):
+    FRG = cv2.bitwise_and(weirdFilter(imred), weirdFilter(imgreen))
+    FRGB = cv2.bitwise_and(FRG, weirdFilter(imblue))
+    RG = cv2.bitwise_or(imred, imgreen)
+    RGB = cv2.bitwise_or(RG, imblue)
+    return cv2.bitwise_and(RGB, FRGB)
+
 
 def getEllipseParams(fit):
     (xc, yc), (a, b), theta = fit
@@ -102,9 +100,9 @@ while True:
     
     frame = cv2.imread("WIN_20190318_17_37_44_Pro.jpg")
 
-    imred =     threshold(frame,[160,32,160,10,150,255]) #red filter
-    imgreen =   threshold(frame,[70,32,160,100,150,255]) #green filter
-    imblue =    threshold(frame,[110,32,160,140,150,255]) #blue filter
+    imred = threshold(frame, [160, 32, 160, 10, 150, 255]) #red filter
+    imgreen = threshold(frame,[70, 32, 160, 100, 150, 255]) #green filter
+    imblue = threshold(frame,[110, 32, 160, 140, 150, 255]) #blue filter
 
     RGB = overlap(imred,imgreen,imblue)
 
@@ -114,16 +112,15 @@ while True:
 
     #random test
     corners, ids, _ = aruco.detectMarkers(frame,dictionary)
-    aruco.drawDetectedMarkers(frame,corners,ids)
+    # aruco.drawDetectedMarkers(frame,corners,ids)
 
-    if ids is not None:
-        rvecs, tvecs, _ = aruco.estimatePoseSingleMarkers(corners, markerLength, cameraMatrix, distCoeffs)
-        for (rvec, tvec) in zip(rvecs,tvecs):
-            aruco.drawAxis(frame, cameraMatrix, distCoeffs, rvec, tvec, 0.1)
+    # if ids is not None:
+    #     rvecs, tvecs, _ = aruco.estimatePoseSingleMarkers(corners, markerLength, cameraMatrix, distCoeffs)
+    #     for (rvec, tvec) in zip(rvecs,tvecs):
+    #         aruco.drawAxis(frame, cameraMatrix, distCoeffs, rvec, tvec, 0.1)
             
     if (len(contours) > 20):
         points = np.vstack(contours)
-        print(points.dtype)
         #set custom ellipse
         fit= cv2.fitEllipse(points)  #(xc, yc), (a, b), theta
 
@@ -159,8 +156,8 @@ while True:
         rvec,_ = cv2.Rodrigues(Rc)
         tvec = np.array([[0.],[0.],[3.]])
         
-        cv2.aruco.drawAxis(frame, cameraMatrix, distCoeffs, rvec, tvec, 0.1)
-        #cv2.circle(frame, (int(xc),int(yc)), 10, (255,0,0))
+        # cv2.aruco.drawAxis(frame, cameraMatrix, distCoeffs, rvec, tvec, 0.1)
+        # cv2.circle(frame, (int(xc),int(yc)), 10, (255,0,0))
 
     cv2.imshow("rgb",combined)
     cv2.imshow("filtered",weirdFilter(combined))
