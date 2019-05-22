@@ -43,12 +43,17 @@ class Camera:
 
     # projects 3d points from world frame to 2d camera image
     def project(self, points):
+        # points in frame given by a boolean array
+        in_frame = np.dot(points - self.pos, self.rMat[:, 0]) > 0
+
         # x-axis is used as projection axis
         M = np.dot(self.rMat, np.array([[0, 0, 1], [1, 0, 0], [0, 1, 0]]))
 
         tvec = -np.dot(np.transpose(M), self.pos)
         rvec = cv2.Rodrigues(np.transpose(M))[0]
-        return cv2.projectPoints(points, rvec, tvec, self.cameraMatrix, self.distCoeffs)[0].astype(np.int64)
+
+        projected_points = cv2.projectPoints(points, rvec, tvec, self.cameraMatrix, self.distCoeffs)[0].astype(np.int64)
+        return projected_points, in_frame
 
     def mouse_control(self, event, x, y, flags, params):
         global xi, yi, dragging
@@ -121,11 +126,12 @@ class Mesh:
         self.theta = np.array([0., 0., 0.])
 
     def draw(self, img, cam, color=(100, 100, 100), pt=1):
-        pvertices = cam.project(self.vertices)
+        pvertices, in_frame = cam.project(self.vertices)
         for edge in self.edges:
-            pt1 = tuple(pvertices[edge[0]][0])
-            pt2 = tuple(pvertices[edge[1]][0])
-            cv2.line(img, pt1, pt2, color, pt)
+            if in_frame[edge[0]] and in_frame[edge[1]]:
+                pt1 = tuple(pvertices[edge[0]][0])
+                pt2 = tuple(pvertices[edge[1]][0])
+                cv2.line(img, pt1, pt2, color, pt)
 
     def translate(self, vector):
         self.pos += vector

@@ -5,7 +5,7 @@ from locateHoopTwoCams import centercoor
 
 
 cam1 = sim.Camera(
-    pos=np.array([-5., -1., -2.]),
+    pos=np.array([-5., -.1, -2.]),
     theta=np.zeros(3),
     cameraMatrix=np.array([[6.e+02, 0., 1.5*320.], [0., 6.e+02, 1.5*240.], [0., 0., 1.]]),
     distCoeffs=np.array([0., 0., 0., 0., 0.])
@@ -13,7 +13,7 @@ cam1 = sim.Camera(
 
 
 cam2 = sim.Camera(
-    pos=np.array([-5., 1., -2.]),
+    pos=np.array([-5., .1, -2.]),
     theta=np.zeros(3),
     cameraMatrix=np.array([[6.e+02, 0., 1.5*320.], [0., 6.e+02, 1.5*240.], [0., 0., 1.]]),
     distCoeffs=np.array([0., 0., 0., 0., 0.])
