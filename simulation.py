@@ -42,9 +42,9 @@ class Camera:
         self.rMat = rotation_matrix(self.theta)
 
     # projects 3d points from world frame to 2d camera image
-    def project(self, points):
-        # points in frame given by a boolean array
-        in_frame = np.dot(points - self.pos, self.rMat[:, 0]) > 0
+    def project(self, points, drawing=False):
+        # points in frame (in front of the camera) given by a boolean array
+        in_frame = np.dot(points - self.pos, self.rMat[:, 0]) > 0.01
 
         # x-axis is used as projection axis
         M = np.dot(self.rMat, np.array([[0, 0, 1], [1, 0, 0], [0, 1, 0]]))
@@ -53,7 +53,10 @@ class Camera:
         rvec = cv2.Rodrigues(np.transpose(M))[0]
 
         projected_points = cv2.projectPoints(points, rvec, tvec, self.cameraMatrix, self.distCoeffs)[0].astype(np.int64)
-        return projected_points, in_frame
+        if drawing:
+            return projected_points, in_frame
+        else:
+            return np.array([point for point, f in zip(projected_points, in_frame) if f])
 
     def mouse_control(self, event, x, y, flags, params):
         global xi, yi, dragging
@@ -126,7 +129,7 @@ class Mesh:
         self.theta = np.array([0., 0., 0.])
 
     def draw(self, img, cam, color=(100, 100, 100), pt=1):
-        pvertices, in_frame = cam.project(self.vertices)
+        pvertices, in_frame = cam.project(self.vertices, drawing=True)
         for edge in self.edges:
             if in_frame[edge[0]] and in_frame[edge[1]]:
                 pt1 = tuple(pvertices[edge[0]][0])

@@ -54,9 +54,12 @@ while True:
     cv2.rectangle(frame1, (0, 0), (960, 720), (255, 255, 255), 1)
     cv2.rectangle(frame2, (0, 0), (960, 720), (255, 255, 255), 1)
 
-    if fit_ellipse:
-        fit1 = cv2.fitEllipse(cam1.project(hoop.vertices))
-        fit2 = cv2.fitEllipse(cam2.project(hoop.vertices))
+    hoop1 = cam1.project(hoop.vertices)
+    hoop2 = cam2.project(hoop.vertices)
+
+    if fit_ellipse and len(hoop1) > 10 and len(hoop2) > 10:
+        fit1 = cv2.fitEllipse(hoop1)
+        fit2 = cv2.fitEllipse(hoop2)
 
         cv2.ellipse(frame1, fit1, (255, 0, 0), 5)
         cv2.ellipse(frame2, fit2, (255, 0, 0), 5)
