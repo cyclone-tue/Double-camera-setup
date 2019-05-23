@@ -185,7 +185,7 @@ def create_hoop(r, px, py, pz, num=40):
 
 
 def create_square(r, px, py, pz):
-    vertices = np.zeros([5,3])
+    vertices = np.zeros([5, 3])
     vertices[0] = [px, py - r, pz - r]
     vertices[1] = [px, py - r, pz + r]
     vertices[2] = [px, py + r, pz + r]
