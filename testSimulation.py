@@ -1,7 +1,7 @@
 import numpy as np
 import cv2
 import simulation as sim
-from locateHoopTwoCams import centercoor
+from locateHoopTwoCams import estimate_pose_2cams
 
 
 cam1 = sim.Camera(
@@ -83,6 +83,13 @@ while True:
                  (0, 0, 255), 1)
         cv2.line(frame2, (int(xc), int(yc)), (int(xc + b * np.cos(theta)), int(yc + b * np.sin(theta))),
                  (255, 0, 0), 1)
+
+        translation, Rotation = estimate_pose_2cams(fit1, fit2, 0.2, cam1, cam2)
+
+
+        rvec, _ = cv2.Rodrigues(Rotation)
+
+        cv2.aruco.drawAxis(frame1, cam1.cameraMatrix, cam1.distCoeffs, rvec, translation, 0.1)
 
     key = cv2.waitKeyEx(1)
     dcam.key_control(key)

@@ -59,8 +59,7 @@ def estimate_pose(fit1, fit2):
     return rvec, tvec
 
 
-def centercoor(hoopx1, hoopy1, hoopx2, cam1, cam2):
-    d = cam2.pos[0]-cam1.pos[0]
+def centercoor(hoopx1, hoopy1, hoopx2, d, cam1, cam2):
     h1 = 1/cam1.cameraMatrix[0][0]
     h2 = 1/cam2.cameraMatrix[0][0]
     z = d/(hoopx1 * h1 - hoopx2 * h2)
@@ -74,3 +73,21 @@ def orientation(a1,b1,a2,b2):
     exc1 = b1/a1
     exc2 = b2/a2
 
+
+def estimate_pose_2cams(fit1, fit2, d, cam1, cam2):
+    (xc1, yc1), (ma1, MA1), theta1 = fit1
+    (xc2, yc2), (ma2, MA2), theta2 = fit2
+    xc1 = xc1 -480
+    yc1 = -yc1 +360
+    xc2 = xc2 -480
+    yc2 = -yc2 +360
+    print(xc1, yc1, xc2)
+    tvec = centercoor(xc1, yc1, xc2, d, cam1, cam2)
+
+
+    Tvec = np.dot(tvec, np.array([[1,0,0],[0,-1,0],[0,0,1]]))
+
+
+    Rmatrix = np.identity(3)
+
+    return Tvec, Rmatrix
