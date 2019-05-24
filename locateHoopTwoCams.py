@@ -1,5 +1,6 @@
 import numpy as np
-
+from numpy import linalg as LA
+import itertools
 
 def getEllipseParams(fit):
     (xc, yc), (a, b), theta = fit
@@ -81,13 +82,34 @@ def estimate_pose_2cams(fit1, fit2, d, cam1, cam2):
     yc1 = -yc1 +360
     xc2 = xc2 -480
     yc2 = -yc2 +360
-    print(xc1, yc1, xc2)
     tvec = centercoor(xc1, yc1, xc2, d, cam1, cam2)
-
-
     Tvec = np.dot(tvec, np.array([[1,0,0],[0,-1,0],[0,0,1]]))
-
-
     Rmatrix = np.identity(3)
 
     return Tvec, Rmatrix
+
+
+def find_N(fit, cam):
+
+    A, B, C, D, E, F = getEllipseParams(fit)
+    print(A,B,C,D,E,F)
+    f = cam.cameraMatrix[0][0]
+    Qe = np.array([[A, B, -D / f], [B, C, -E / f], [-D / f, -E / f, F / f ** 2]])
+    w, V = LA.eig(Qe)
+
+    # making sure the eigenvalue condition is satified
+    for p in itertools.permutations([0, 1, 2]):
+        pw = l1, l2, l3 = [w[i] for i in p]  # permutation applied to w
+        if (l1 * l2 > 0 and l1 * l3 < 0 and abs(l1) >= abs(l2)):
+            w = pw
+            V = np.transpose(np.array([V[:, i] for i in p]))  # permutation applied to V
+            break
+
+    l1, l2, l3 = w
+
+    g = np.sqrt((l2 - l3) / (l1 - l3))
+    h = np.sqrt((l1 - l2) / (l1 - l3))
+
+    Nvector = np.dot(V, np.array([h, 0, g]))
+
+    return Nvector
