@@ -92,9 +92,9 @@ def estimate_pose_2cams(fit1, fit2, d, cam1, cam2):
 def find_N(fit, cam):
 
     A, B, C, D, E, F = getEllipseParams(fit)
-    print(A,B,C,D,E,F)
+
     f = cam.cameraMatrix[0][0]
-    Qe = np.array([[A, B, -D / f], [B, C, -E / f], [-D / f, -E / f, F / f ** 2]])
+    Qe = np.array([[A, B, D / f], [B, C, E / f], [D / f, E / f, F / f ** 2]])
     w, V = LA.eig(Qe)
 
     # making sure the eigenvalue condition is satified

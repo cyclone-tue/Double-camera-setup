@@ -89,11 +89,13 @@ while True:
 
         rvec, _ = cv2.Rodrigues(Rotation)
 
-        cv2.aruco.drawAxis(frame1, cam1.cameraMatrix, cam1.distCoeffs, rvec, translation, 0.1)
+        #cv2.aruco.drawAxis(frame1, cam1.cameraMatrix, cam1.distCoeffs, rvec, translation, 0.1)
         translationcam2 = translation - np.array([0.2,0,0])
         cv2.aruco.drawAxis(frame2, cam2.cameraMatrix, cam2.distCoeffs, rvec, translationcam2, 0.1)
         Nvec = find_N(fit1, cam1)
-        print(Nvec)
+        print(translation, translation+Nvec)
+        Nvec_projection=sim.create_Nvec(translation,Nvec)
+        Nvec_projection.draw(frame1, cam1, color=(0, 255, 0), pt=5)
 
     key = cv2.waitKeyEx(1)
     dcam.key_control(key)
