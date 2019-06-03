@@ -193,3 +193,9 @@ def create_square(r, px, py, pz):
     vertices[4] = [px, py - r, pz - r]
     return create_path(vertices, loop=True)
 
+
+def create_Nvec(Tvec, Nvec):
+    vertices = np.zeros([2, 3])
+    vertices[0]=Tvec
+    vertices[1]=Tvec+Nvec
+    return create_path(vertices, loop=True)

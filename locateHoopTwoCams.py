@@ -1,5 +1,6 @@
 import numpy as np
-
+from numpy import linalg as LA
+import itertools
 
 def getEllipseParams(fit):
     (xc, yc), (a, b), theta = fit
@@ -59,8 +60,7 @@ def estimate_pose(fit1, fit2):
     return rvec, tvec
 
 
-def centercoor(hoopx1, hoopy1, hoopx2, cam1, cam2):
-    d = cam2.pos[0]-cam1.pos[0]
+def centercoor(hoopx1, hoopy1, hoopx2, d, cam1, cam2):
     h1 = 1/cam1.cameraMatrix[0][0]
     h2 = 1/cam2.cameraMatrix[0][0]
     z = d/(hoopx1 * h1 - hoopx2 * h2)
@@ -74,3 +74,42 @@ def orientation(a1,b1,a2,b2):
     exc1 = b1/a1
     exc2 = b2/a2
 
+
+def estimate_pose_2cams(fit1, fit2, d, cam1, cam2):
+    (xc1, yc1), (ma1, MA1), theta1 = fit1
+    (xc2, yc2), (ma2, MA2), theta2 = fit2
+    xc1 = xc1 -480
+    yc1 = -yc1 +360
+    xc2 = xc2 -480
+    yc2 = -yc2 +360
+    tvec = centercoor(xc1, yc1, xc2, d, cam1, cam2)
+    Tvec = np.dot(tvec, np.array([[1,0,0],[0,-1,0],[0,0,1]]))
+    Rmatrix = np.identity(3)
+
+    return Tvec, Rmatrix
+
+
+def find_N(fit, cam):
+
+    A, B, C, D, E, F = getEllipseParams(fit)
+
+    f = cam.cameraMatrix[0][0]
+    Qe = np.array([[A, B, D / f], [B, C, E / f], [D / f, E / f, F / f ** 2]])
+    w, V = LA.eig(Qe)
+
+    # making sure the eigenvalue condition is satified
+    for p in itertools.permutations([0, 1, 2]):
+        pw = l1, l2, l3 = [w[i] for i in p]  # permutation applied to w
+        if (l1 * l2 > 0 and l1 * l3 < 0 and abs(l1) >= abs(l2)):
+            w = pw
+            V = np.transpose(np.array([V[:, i] for i in p]))  # permutation applied to V
+            break
+
+    l1, l2, l3 = w
+
+    g = np.sqrt((l2 - l3) / (l1 - l3))
+    h = np.sqrt((l1 - l2) / (l1 - l3))
+
+    Nvector = np.dot(V, np.array([h, 0, g]))
+
+    return Nvector
