@@ -7,7 +7,6 @@ import itertools
 dictionary = aruco.Dictionary_get(aruco.DICT_ARUCO_ORIGINAL)
 cap = cv2.VideoCapture(0)
 
-
 # Tunable
 alpha = 0
 S1 = -1
@@ -100,7 +99,7 @@ while True:
     S2 = -1+cv2.getTrackbarPos("S2","SJES")
     S3 = -1+cv2.getTrackbarPos("S3","SJES")
     
-    frame = cv2.imread("WIN_20190318_17_37_44_Pro.jpg")
+    _, frame = cap.read() #cv2.imread("WIN_20190318_17_37_39_Pro.jpg")
 
     imred =     threshold(frame,[160,32,160,10,150,255]) #red filter
     imgreen =   threshold(frame,[70,32,160,100,150,255]) #green filter
