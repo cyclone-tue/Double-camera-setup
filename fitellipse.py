@@ -101,13 +101,13 @@ while True:
     
     _, frame = cap.read() #cv2.imread("WIN_20190318_17_37_39_Pro.jpg")
 
-    imred =     threshold(frame,[160,32,160,10,150,255]) #red filter
-    imgreen =   threshold(frame,[70,32,160,100,150,255]) #green filter
-    imblue =    threshold(frame,[110,32,160,140,150,255]) #blue filter
+    imred = threshold(frame, [160, 32,160,10,150,255]) #red filter
+    imgreen = threshold(frame,[70,32,160,100,150,255]) #green filter
+    imblue = threshold(frame,[110,32,160,140,150,255]) #blue filter
 
-    RGB = overlap(imred,imgreen,imblue)
+    RGB = overlap(imred, imgreen, imblue)
 
-    combined = np.stack([imblue,imgreen,imred],axis=2)
+    combined = np.stack([imblue, imgreen, imred], axis=2)
     
     contours, hierarchy = cv2.findContours(RGB,cv2.RETR_TREE,cv2.CHAIN_APPROX_SIMPLE)
 
