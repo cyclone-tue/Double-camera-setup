@@ -1,130 +1,111 @@
 import numpy as np
 import cv2
-#from cv2 import aruco
-from numpy import linalg as LA
-import itertools
-
-class Camera:
-    def __init__(self, rMat, pos, cameraMatrix, distCoeffs):
-        self.rMat = rMat    # wrt world frame
-        self.pos = pos      # wrt world frame
-        self.cameraMatrix = cameraMatrix
-        self.distCoeffs = distCoeffs
-
-    # projects 3d points from world frame to 2d camera image
-    def project(self, points):        
-        tvec = -np.dot(np.transpose(self.rMat),self.pos)
-        rvec = cv2.Rodrigues(np.transpose(self.rMat))[0]
-        return cv2.projectPoints(points, rvec, tvec, self.cameraMatrix, self.distCoeffs)[0].astype(np.int64)
-
-# Calculates Rotation Matrix given euler angles.
-def RotationMatrix(theta):
-    R_x = np.array([[1,0,0],
-                    [0,np.cos(theta[0]),-np.sin(theta[0])],
-                    [0,np.sin(theta[0]), np.cos(theta[0])]
-                    ])  
-    R_y = np.array([[np.cos(theta[1]),0,np.sin(theta[1])],
-                    [0,1,0],
-                    [-np.sin(theta[1]),0,np.cos(theta[1])]
-                    ])                 
-    R_z = np.array([[np.cos(theta[2]),-np.sin(theta[2]),0],
-                    [np.sin(theta[2]), np.cos(theta[2]),0],
-                    [0,0,1]
-                    ])                 
-    R = np.dot(R_z, np.dot( R_y, R_x )) 
-    return R
-
-def create_grid(rows, cols, length):
-    grid = np.zeros([rows,cols,3])
-    for i in range(rows):
-        for j in range(cols):
-            grid[i][j]=[i*length-(rows-1)*length/2,0,j*length-(cols-1)*length/2]
-    return grid
-
-def create_hoop(r, px,py,pz):
-    hoop = np.zeros([21,3])
-    for i in range(21):
-        hoop[i]=[px+r*np.cos(i*np.pi/10),py+r*np.sin(i*np.pi/10),pz]
-    return hoop
-    
-
-def project_grid(grid, cam):
-    return np.array([
-        cam.project(row)
-        for row in grid])
-
-def draw_grid(grid, img, cam):
-    pgrid = project_grid(grid, cam)
-    for i in range(grid.shape[0]): #rows
-        for j in range(grid.shape[1]): #cols
-            if i!=0:
-                pt1= tuple(pgrid[i][j][0])
-                pt2= tuple(pgrid[i-1][j][0])
-                cv2.line(img, pt1, pt2, (0,255,0),1)
-            if j!=0:
-                pt1= tuple(pgrid[i][j][0])
-                pt2= tuple(pgrid[i][j-1][0])
-                cv2.line(img, pt1, pt2, (0,255,0),1)
-
-def draw_hoop(hoop, img, cam):
-    phoop = cam.project(hoop)
-    for i in range(hoop.shape[0]): #number of pionts
-        if i!=0:
-            pt1 = tuple(phoop[i][0])
-            pt2 = tuple(phoop[i-1][0])
-            cv2.line(img, pt1, pt2, (0,255,0),1)
+import simulation as sim
+from locateHoopTwoCams import estimate_pose_2cams, find_N
 
 
-def update_orientation(event, x, y, flags, params):
-    global xi,yi, dragging, cam1
-    if event == cv2.EVENT_LBUTTONDOWN:
-        dragging = True
-        xi,yi = x,y
-    elif event == cv2.EVENT_MOUSEMOVE:
-        if dragging:
-            #print(x-xi,y-yi)
-            yaw = np.pi*(x-xi)/1536
-            pitch = np.pi*(y-yi)/(2*864)
-            cam1.rMat = RotationMatrix([pitch,-yaw,0])
-    elif event == cv2.EVENT_LBUTTONUP:
-        dragging = False
-
-
-rvec = np.array([[0.],[0.],[0.]])
-tvec = np.array([[0.],[0.5],[5.]])
-
-dragging = False
-xi,yi=-1,-1
-
-cam1 = Camera(
-    rMat = RotationMatrix([0,0,0]),
-    pos = np.array([[0.],[0.5],[5.]]),
-    cameraMatrix = np.array([[6.e+02, 0., 768.], [0.,6.e+02, 432.], [0., 0., 1. ]]),
-    distCoeffs = np.array([0.,0.,0.,0.,0.])
+cam1 = sim.Camera(
+    pos=np.array([-5., -.1, -2.]),
+    theta=np.zeros(3),
+    cameraMatrix=np.array([[6.e+02, 0., 1.5*320.], [0., 6.e+02, 1.5*240.], [0., 0., 1.]]),
+    distCoeffs=np.array([0., 0., 0., 0., 0.])
     )
 
-grid = create_grid(10,10,0.3)
-hoop = create_hoop(1,0,2,0)
+
+cam2 = sim.Camera(
+    pos=np.array([-5., .1, -2.]),
+    theta=np.zeros(3),
+    cameraMatrix=np.array([[6.e+02, 0., 1.5*320.], [0., 6.e+02, 1.5*240.], [0., 0., 1.]]),
+    distCoeffs=np.array([0., 0., 0., 0., 0.])
+    )
+
+dcam = sim.DoubleCamera(
+    cam1=cam1,
+    cam2=cam2,
+    pos=np.array([-5., 0., -2.])
+)
+
+
+# creating graphics
+grid = sim.create_grid(10, 10, 0.3)
+hoop = sim.create_hoop(1, px=0, py=0, pz=-2)
+square = sim.create_square(1, px=0, py=0, pz=-2)
+
+
 cv2.namedWindow('simulation')
-cv2.setMouseCallback('simulation', update_orientation)
+cv2.setMouseCallback('simulation', dcam.mouse_control)
+
+fit_ellipse = False
 
 
 while True:
-    #using screen resolution of 1536x864
-    frame1 = np.zeros((864,1536,3),dtype=np.uint8) #shape = (480, 640, 3)
-    frame2 = np.zeros((864,1536,3),dtype=np.uint8) #shape = (480, 640, 3)    
-    
-    draw_grid(grid, frame1, cam1)
-    draw_hoop(hoop, frame1, cam1)
+    # using screen resolution of 1536x864
+    frame1 = np.zeros((720, 960, 3), dtype=np.uint8)  # cv2.imread("images.jpg")
+    frame2 = np.zeros((720, 960, 3), dtype=np.uint8)  # shape = (480, 640, 3)
 
-    # fit = cv2.fitEllipse(cam1.project(hoop))
-    # cv2.ellipse(frame1,fit,(255,0,0),5)
+    grid.draw(frame1, cam1)
+    hoop.draw(frame1, cam1, color=(0, 255, 0), pt=1)
+    square.draw(frame1, cam1, color=(0, 255, 0), pt=1)
 
-    cv2.imshow("simulation", frame1)
-    
-    control = cv2.waitKeyEx(1)
-    if control == 27:
+    grid.draw(frame2, cam2)
+    hoop.draw(frame2, cam2, color=(0, 255, 0), pt=1)
+    square.draw(frame2, cam2, color=(0, 255, 0), pt=1)
+
+    cv2.rectangle(frame1, (0, 0), (960, 720), (255, 255, 255), 1)
+    cv2.rectangle(frame2, (0, 0), (960, 720), (255, 255, 255), 1)
+
+    hoop1 = cam1.project(hoop.vertices)
+    hoop2 = cam2.project(hoop.vertices)
+
+    if fit_ellipse and len(hoop1) > 10 and len(hoop2) > 10:
+        fit1 = cv2.fitEllipse(hoop1)
+        fit2 = cv2.fitEllipse(hoop2)
+
+        cv2.ellipse(frame1, fit1, (255, 0, 0), 5)
+        cv2.ellipse(frame2, fit2, (255, 0, 0), 5)
+
+        # draw ellipse long and short axis  (RED = LONG AXIS) (BLUE = SHORT AXIS)
+        (xc, yc), (ma, MA), theta = fit1
+        theta = theta * np.pi / 180
+        a, b = MA/2, ma/2
+        cv2.circle(frame1, (int(xc), int(yc)), 2, (255, 255, 255), 1)
+        cv2.line(frame1, (int(xc), int(yc)), (int(xc - a * np.sin(theta)), int(yc + a * np.cos(theta))),
+                 (0, 0, 255), 1)
+        cv2.line(frame1, (int(xc), int(yc)), (int(xc + b * np.cos(theta)), int(yc + b * np.sin(theta))),
+                 (255, 0, 0), 1)
+
+        # draw ellipse long and short axis  (RED = LONG AXIS) (BLUE = SHORT AXIS)
+        (xc, yc), (ma, MA), theta = fit2
+        theta = theta * np.pi / 180
+        a, b = MA/2, ma/2
+        cv2.circle(frame2, (int(xc), int(yc)), 2, (255, 255, 255), 1)
+        cv2.line(frame2, (int(xc), int(yc)), (int(xc - a * np.sin(theta)), int(yc + a * np.cos(theta))),
+                 (0, 0, 255), 1)
+        cv2.line(frame2, (int(xc), int(yc)), (int(xc + b * np.cos(theta)), int(yc + b * np.sin(theta))),
+                 (255, 0, 0), 1)
+
+        translation, Rotation = estimate_pose_2cams(fit1, fit2, 0.2, cam1, cam2)
+
+
+        rvec, _ = cv2.Rodrigues(Rotation)
+
+        #cv2.aruco.drawAxis(frame1, cam1.cameraMatrix, cam1.distCoeffs, rvec, translation, 0.1)
+        translationcam2 = translation - np.array([0.2,0,0])
+        cv2.aruco.drawAxis(frame2, cam2.cameraMatrix, cam2.distCoeffs, rvec, translationcam2, 0.1)
+        Nvec = find_N(fit1, cam1)
+        print(translation, translation+Nvec)
+        Nvec_projection=sim.create_Nvec(translation,Nvec)
+        Nvec_projection.draw(frame1, cam1, color=(0, 255, 0), pt=5)
+
+    key = cv2.waitKeyEx(1)
+    dcam.key_control(key)
+
+    if key == 102:
+        fit_ellipse = not fit_ellipse
+
+    if key == 27:
         break
+<<<<<<< HEAD
     if control == 119:              #w          FORWARD
         cam1.pos[2] = cam1.pos[2] - 0.1
     if control == 115:              #s          BACKWARD
@@ -138,5 +119,10 @@ while True:
     if control == 108:              #o          DOWN
         cam1.pos[1] = cam1.pos[1] - 0.1
         
+=======
+
+    vis = np.hstack((frame1, frame2))
+    cv2.imshow("simulation", vis)
+>>>>>>> 031f95d531654f5b483df9211650144f0cb08cc0
 
 cv2.destroyAllWindows()
