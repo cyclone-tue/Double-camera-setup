@@ -129,13 +129,13 @@ while True:
         cam1.pos[2] = cam1.pos[2] - 0.1
     if control == 115:              #s          BACKWARD
         cam1.pos[2] = cam1.pos[2] + 0.1
-    if control == 100:              #d          RIGHT
+    if control == 100:              #d          RIGHTw
         cam1.pos[0] = cam1.pos[0] - 0.1
     if control == 97:               #a          LEFT
         cam1.pos[0] = cam1.pos[0] + 0.1
-    if control == 2490368:          #uparrow    UP
+    if control == 112:              #p          UP
         cam1.pos[1] = cam1.pos[1] + 0.1
-    if control == 2621440:          #downarrow  DOWN
+    if control == 108:              #o          DOWN
         cam1.pos[1] = cam1.pos[1] - 0.1
         
 
